@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import AboutUs from './AboutUs.jsx'
 import BandDetails from './BandDetails.jsx'
 import Bands from './Bands.jsx'
@@ -16,7 +16,7 @@ const banners = [banner1, banner2, banner3]
 const navigationLinks = [
   { id: 'home', label: 'მთავარი', href: '#home' },
   { id: 'bands', label: 'ბენდები', href: '#bands' },
-  { id: 'about', label: 'ჩვენს შესახებ', href: '#about' },
+  { id: 'about', label: 'ჩვენ შესახებ', href: '#about' },
 ]
 
 function SearchIcon({ className = 'icon' }) {
@@ -72,67 +72,204 @@ function SunIcon({ className = 'icon' }) {
   )
 }
 
+function MenuIcon({ className = 'icon' }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" strokeLinecap="round" strokeWidth="2" />
+    </svg>
+  )
+}
+
+function CloseIcon({ className = 'icon' }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="m6 6 12 12M18 6 6 18" stroke="currentColor" strokeLinecap="round" strokeWidth="2" />
+    </svg>
+  )
+}
+
+function PickIcon({ className = 'icon' }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path
+        d="M12 3.2c4.35 0 7.6 2.43 7.6 6.85 0 4.18-3.23 8.56-7.6 11.05-4.37-2.49-7.6-6.87-7.6-11.05 0-4.42 3.25-6.85 7.6-6.85Z"
+        stroke="currentColor"
+        strokeLinejoin="round"
+        strokeWidth="1.8"
+      />
+      <path d="m8.4 10.2 3.05 3.05 4.45-5.15" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" />
+    </svg>
+  )
+}
+
+function normalizeSearch(value) {
+  return value.trim().toLocaleLowerCase('ka-GE')
+}
+
+function findBestSearchRoute(searchTerm) {
+  const normalizedSearch = normalizeSearch(searchTerm)
+
+  if (!normalizedSearch) {
+    return null
+  }
+
+  const matchingBand = allBands.find((band) =>
+    normalizeSearch(band.name).includes(normalizedSearch),
+  )
+
+  if (matchingBand) {
+    return `band/${matchingBand.id}`
+  }
+
+  for (const band of allBands) {
+    const matchingSong = band.songs.find((song) =>
+      normalizeSearch(song.title).includes(normalizedSearch),
+    )
+
+    if (matchingSong) {
+      return `band/${band.id}/song/${encodeURIComponent(getSongRouteId(matchingSong))}`
+    }
+  }
+
+  return 'bands'
+}
+
 function Header({ activePage, onNavigate }) {
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false)
+  const [searchTerm, setSearchTerm] = useState('')
   const activeNavId = activePage === 'bandDetails' || activePage === 'songChord' ? 'bands' : activePage
+
+  useEffect(() => {
+    document.body.classList.toggle('drawer-open', isDrawerOpen)
+
+    return () => document.body.classList.remove('drawer-open')
+  }, [isDrawerOpen])
+
+  useEffect(() => {
+    setIsDrawerOpen(false)
+  }, [activePage])
 
   const handleNavigate = (event, linkId) => {
     event.preventDefault()
+    setIsDrawerOpen(false)
     onNavigate(linkId)
   }
+
+  const handleSearch = (event) => {
+    event.preventDefault()
+    const route = findBestSearchRoute(searchTerm)
+
+    if (!route) {
+      return
+    }
+
+    setIsDrawerOpen(false)
+    window.location.hash = route
+  }
+
+  const navItems = navigationLinks.map((link) => (
+    <a
+      key={link.id}
+      className={activeNavId === link.id ? 'nav-link nav-link--active' : 'nav-link'}
+      href={link.href}
+      onClick={(event) => handleNavigate(event, link.id)}
+    >
+      {link.label}
+    </a>
+  ))
 
   return (
     <header className="site-header" id="home">
       <div className="header-shell">
-        <nav className="navbar flex items-center justify-between px-8 py-4" aria-label="Primary navigation">
+        <nav className="navbar" aria-label="Primary navigation">
           <a className="brand" href="#home" aria-label="RIFF.GE მთავარი" onClick={(event) => handleNavigate(event, 'home')}>
             <img src={logo} alt="RIFF.GE" />
           </a>
 
-          <div className="nav-links flex items-center gap-6">
-            {navigationLinks.map((link) => (
-              <a
-                key={link.id}
-                className={activeNavId === link.id ? 'nav-link nav-link--active' : 'nav-link'}
-                href={link.href}
-                onClick={(event) => handleNavigate(event, link.id)}
-              >
-                {link.label}
-              </a>
-            ))}
-          </div>
+          <div className="nav-links nav-links--desktop">{navItems}</div>
 
-          <div className="header-actions flex items-center gap-6">
+          <div className="header-actions header-actions--desktop">
             <a className="add-chords" href="#add-chords">
-              აკორდების დამატება
+              <PickIcon />
+              <span>აკორდების დამატება</span>
             </a>
             <a
-              className="instagram-follow whitespace-nowrap px-4 py-2"
+              className="instagram-follow"
               href="https://www.instagram.com/"
               target="_blank"
               rel="noreferrer"
             >
               <InstagramIcon className="instagram-follow__icon" />
-              <span>გამოგვიყევი Instagram-ზე</span>
+              <span>Instagram-ზე</span>
             </a>
           </div>
+
+          <button
+            className="mobile-menu-button"
+            type="button"
+            aria-expanded={isDrawerOpen}
+            aria-controls="mobile-navigation"
+            aria-label={isDrawerOpen ? 'მენიუს დახურვა' : 'მენიუს გახსნა'}
+            onClick={() => setIsDrawerOpen((currentValue) => !currentValue)}
+          >
+            {isDrawerOpen ? <CloseIcon /> : <MenuIcon />}
+          </button>
         </nav>
 
-        {(activePage === 'home' || activePage === 'bandDetails') && (
-          <form className="search-bar" role="search">
-            <label className="sr-only" htmlFor="song-search">
-              მოძებნე სიმღერა ან ბენდი
-            </label>
-            <input
-              id="song-search"
-              type="search"
-              placeholder="მოძებნე სიმღერა ან ბენდი (მაგ: დაგდაგანი)..."
-            />
-            <button type="submit" aria-label="ძიება">
-              <SearchIcon className="search-icon" />
-            </button>
-          </form>
-        )}
+        <form className="search-bar" role="search" onSubmit={handleSearch}>
+          <label className="sr-only" htmlFor="song-search">
+            მოძებნე სიმღერა ან ბენდი
+          </label>
+          <input
+            id="song-search"
+            type="search"
+            value={searchTerm}
+            placeholder="მოძებნე სიმღერა ან ბენდი..."
+            onChange={(event) => setSearchTerm(event.target.value)}
+          />
+          <button type="submit" aria-label="ძიება">
+            <SearchIcon className="search-icon" />
+          </button>
+        </form>
       </div>
+
+      <div
+        className={isDrawerOpen ? 'drawer-backdrop drawer-backdrop--open' : 'drawer-backdrop'}
+        aria-hidden="true"
+        onClick={() => setIsDrawerOpen(false)}
+      />
+
+      <aside
+        className={isDrawerOpen ? 'mobile-drawer mobile-drawer--open' : 'mobile-drawer'}
+        id="mobile-navigation"
+        aria-hidden={!isDrawerOpen}
+      >
+        <div className="mobile-drawer__top">
+          <img src={logo} alt="RIFF.GE" />
+          <button type="button" aria-label="მენიუს დახურვა" onClick={() => setIsDrawerOpen(false)}>
+            <CloseIcon />
+          </button>
+        </div>
+
+        <nav className="mobile-drawer__nav" aria-label="Mobile navigation">
+          {navItems}
+        </nav>
+
+        <a className="add-chords add-chords--drawer" href="#add-chords" onClick={() => setIsDrawerOpen(false)}>
+          <PickIcon />
+          <span>აკორდების დამატება</span>
+        </a>
+
+        <a
+          className="instagram-follow instagram-follow--drawer"
+          href="https://www.instagram.com/"
+          target="_blank"
+          rel="noreferrer"
+        >
+          <InstagramIcon className="instagram-follow__icon" />
+          <span>გამოგვყევი Instagram-ზე</span>
+        </a>
+      </aside>
     </header>
   )
 }
@@ -149,7 +286,7 @@ function HeroCarousel() {
   }, [])
 
   return (
-    <section className="hero-carousel relative overflow-hidden rounded-2xl min-h-[300px] flex items-center" aria-label="Featured Georgian rock bands">
+    <section className="hero-carousel" aria-label="Featured Georgian rock bands">
       {banners.map((banner, index) => (
         <img
           key={banner}
@@ -161,23 +298,40 @@ function HeroCarousel() {
       ))}
 
       <div className="hero-carousel__shade" />
-      <div className="hero-carousel__content pl-12 pr-6 py-8 z-10 max-w-xl">
-        <h1 className="text-3xl md:text-4xl font-bold text-white leading-tight">
-          ქართული როკის
-          <br />
-          აკორდები და რიფები
-          <br />
-          ერთ ადგილას<span>.</span>
+      <div className="hero-carousel__content">
+        <p>RIFF.GE</p>
+        <h1>
+          ქართული როკის აკორდები და რიფები ერთ ადგილას<span>.</span>
         </h1>
+      </div>
+      <div className="hero-carousel__dots" aria-hidden="true">
+        {banners.map((banner, index) => (
+          <span key={`${banner}-dot`} className={index === activeBanner ? 'is-active' : ''} />
+        ))}
       </div>
     </section>
   )
 }
 
 function BandCard({ band, onSelectBand }) {
+  const handleKeyDown = (event) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault()
+      onSelectBand(band.id)
+    }
+  }
+
   return (
-    <article className="band-card" role="button" tabIndex="0" onClick={() => onSelectBand(band.id)}>
-      <img src={band.image} alt={band.name} />
+    <article
+      className="band-card"
+      role="button"
+      tabIndex="0"
+      onClick={() => onSelectBand(band.id)}
+      onKeyDown={handleKeyDown}
+    >
+      <div className="band-card__image-wrap">
+        <img src={band.image} alt={band.name} />
+      </div>
       <div className={`band-card__footer ${band.homeFooterClass}`}>
         <h3>{band.name}</h3>
         <p>{band.cardSongs}</p>
@@ -190,7 +344,10 @@ function StartingBands({ onSelectBand }) {
   return (
     <section className="bands-section" id="starting-bands">
       <div className="page-shell">
-        <h2>Starting bands</h2>
+        <div className="section-heading">
+          <p className="section-eyebrow">რჩეული</p>
+          <h2>Starting bands</h2>
+        </div>
         <div className="bands-grid">
           {startingBands.map((band) => (
             <BandCard key={band.name} band={band} onSelectBand={onSelectBand} />
@@ -231,7 +388,7 @@ function Footer({ isDarkMode, onToggleMode }) {
               {isDarkMode ? <MoonIcon /> : <SunIcon />}
             </span>
           </span>
-          <span>Dark/Light Mode</span>
+          <span>{isDarkMode ? 'Dark Mode' : 'Light Mode'}</span>
         </button>
       </div>
     </footer>
@@ -296,12 +453,18 @@ function App() {
     window.location.hash = 'bands'
   }
 
-  const selectedBand = allBands.find((band) => band.id === route.bandId) ?? allBands[0]
+  const selectedBand = useMemo(
+    () => allBands.find((band) => band.id === route.bandId) ?? allBands[0],
+    [route.bandId],
+  )
   const fallbackSong = allBands[0].songs[0]
-  const selectedSong =
-    selectedBand.songs.find((song) => getSongRouteId(song) === route.songId) ??
-    selectedBand.songs[0] ??
-    fallbackSong
+  const selectedSong = useMemo(
+    () =>
+      selectedBand.songs.find((song) => getSongRouteId(song) === route.songId) ??
+      selectedBand.songs[0] ??
+      fallbackSong,
+    [fallbackSong, route.songId, selectedBand],
+  )
 
   return (
     <div className={isDarkMode ? 'app app--dark' : 'app app--light'}>

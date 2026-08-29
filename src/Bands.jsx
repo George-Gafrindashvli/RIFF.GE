@@ -15,7 +15,29 @@ function BandsSearchIcon() {
   )
 }
 
-function BandCard({ band, onSelectBand }) {
+function UsersIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M16 19c0-2.2-1.8-4-4-4s-4 1.8-4 4" stroke="currentColor" strokeLinecap="round" strokeWidth="2" />
+      <path d="M12 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" stroke="currentColor" strokeWidth="2" />
+      <path d="M19 18c0-1.6-1.05-2.95-2.5-3.45M16.5 5.35a2.5 2.5 0 0 1 0 4.3M5 18c0-1.6 1.05-2.95 2.5-3.45M7.5 5.35a2.5 2.5 0 0 0 0 4.3" stroke="currentColor" strokeLinecap="round" strokeWidth="2" />
+    </svg>
+  )
+}
+
+function ArrowIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M5 12h14m-6-6 6 6-6 6" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.2" />
+    </svg>
+  )
+}
+
+function normalizeSearch(value) {
+  return value.trim().toLocaleLowerCase('ka-GE')
+}
+
+function BandCard({ band, onSelectBand, isFeatured }) {
   const handleKeyDown = (event) => {
     if (event.key === 'Enter' || event.key === ' ') {
       event.preventDefault()
@@ -25,23 +47,27 @@ function BandCard({ band, onSelectBand }) {
 
   return (
     <article
-      className="bands-page-card rounded-2xl overflow-hidden cursor-pointer"
+      className={isFeatured ? 'bands-page-card bands-page-card--featured' : 'bands-page-card'}
       role="button"
       tabIndex="0"
+      style={{ '--band-image': `url(${band.banner})` }}
       onClick={() => onSelectBand(band.id)}
       onKeyDown={handleKeyDown}
     >
-      <div className="bands-page-card__image-wrap">
-        <img
-          className="object-cover h-48 w-full transition-transform duration-300 hover:scale-105"
-          src={band.image}
-          alt={band.name}
-        />
+      <div className="bands-page-card__media">
+        <img src={band.image} alt={band.name} />
       </div>
-      <div className={`bands-page-card__footer ${band.footerClass}`}>
+      <div className="bands-page-card__content">
+        <p>{band.memberCount} წევრი</p>
         <h2>{band.name}</h2>
-        <p>{band.cardSongs}</p>
+        <span>
+          <UsersIcon />
+          {band.cardSongs}
+        </span>
       </div>
+      <span className="bands-page-card__arrow" aria-hidden="true">
+        <ArrowIcon />
+      </span>
     </article>
   )
 }
@@ -50,54 +76,57 @@ function Bands({ onSelectBand }) {
   const [searchTerm, setSearchTerm] = useState('')
 
   const filteredBands = useMemo(() => {
-    const normalizedSearch = searchTerm.trim().toLocaleLowerCase('ka-GE')
+    const normalizedSearch = normalizeSearch(searchTerm)
 
     if (!normalizedSearch) {
       return allBands
     }
 
     return allBands.filter((band) =>
-      band.name.toLocaleLowerCase('ka-GE').includes(normalizedSearch),
+      normalizeSearch(band.name).includes(normalizedSearch),
     )
   }, [searchTerm])
 
   return (
     <main className="bands-page" id="bands">
       <section className="bands-page-hero">
-        <div className="page-shell">
-          <p className="section-eyebrow">RIFF.GE</p>
-          <div className="bands-page-hero__content">
-            <div>
-              <h1>
-                ბენდები<span>.</span>
-              </h1>
-              <p>
-                აღმოაჩინე ქართული როკისა და ალტერნატიული სცენის ბენდები,
-                აკორდები და სიმღერები ერთ სივრცეში.
-              </p>
-            </div>
-            <form className="bands-page-search" role="search">
-              <label className="sr-only" htmlFor="band-search">
-                მოძებნე ბენდი
-              </label>
-              <input
-                id="band-search"
-                type="search"
-                value={searchTerm}
-                placeholder="მოძებნე ბენდი..."
-                onChange={(event) => setSearchTerm(event.target.value)}
-              />
-              <BandsSearchIcon />
-            </form>
+        <div className="page-shell bands-page-hero__inner">
+          <div>
+            <p className="section-eyebrow">კატალოგი</p>
+            <h1>
+              ქართული როკ ბენდები<span>.</span>
+            </h1>
+            <p>
+              აღმოაჩინე სცენის გამორჩეული ჯგუფები, სიმღერები და აკორდები ერთ მოქნილ სივრცეში.
+            </p>
           </div>
+
+          <form className="bands-page-search" role="search">
+            <label className="sr-only" htmlFor="band-search">
+              მოძებნე ბენდი
+            </label>
+            <input
+              id="band-search"
+              type="search"
+              value={searchTerm}
+              placeholder="მოძებნე ბენდი..."
+              onChange={(event) => setSearchTerm(event.target.value)}
+            />
+            <BandsSearchIcon />
+          </form>
         </div>
       </section>
 
       <section className="bands-page-list">
         <div className="page-shell">
-          <div className="bands-page-grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {filteredBands.map((band) => (
-              <BandCard key={band.name} band={band} onSelectBand={onSelectBand} />
+          <div className="bands-page-grid">
+            {filteredBands.map((band, index) => (
+              <BandCard
+                key={band.name}
+                band={band}
+                isFeatured={index === 0 && !searchTerm}
+                onSelectBand={onSelectBand}
+              />
             ))}
           </div>
 

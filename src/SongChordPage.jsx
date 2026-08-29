@@ -1,25 +1,22 @@
 import { useEffect, useMemo, useState } from 'react'
 
-const accentChords = ['Gm', 'Dm', 'A', 'Bb', 'B', 'F', 'Am', 'Em', 'C', 'G', 'E']
+const chordTokenPattern = /^[A-G](?:#|b)?(?:m|maj|min|dim|aug|sus[24]?|add\d*)?(?:\d+)?(?:\/[A-G](?:#|b)?)?$/
 
 const chordDiagrams = {
-  Gm: {
-    fretLabel: '3',
-    markers: ['', '', '', '', '', ''],
-    barre: { fret: 1, from: 0, to: 5 },
+  A: {
+    markers: ['x', 'o', '', '', '', 'o'],
     dots: [
-      { string: 1, fret: 3 },
-      { string: 2, fret: 3 },
+      { string: 2, fret: 2 },
+      { string: 3, fret: 2 },
+      { string: 4, fret: 2 },
     ],
   },
-  Bb: {
-    fretLabel: '1',
-    markers: ['x', '', '', '', '', ''],
-    barre: { fret: 1, from: 1, to: 5 },
+  Am: {
+    markers: ['x', 'o', '', '', '', 'o'],
     dots: [
-      { string: 2, fret: 3 },
-      { string: 3, fret: 3 },
-      { string: 4, fret: 3 },
+      { string: 2, fret: 2 },
+      { string: 3, fret: 2 },
+      { string: 4, fret: 1 },
     ],
   },
   B: {
@@ -32,37 +29,14 @@ const chordDiagrams = {
       { string: 4, fret: 3 },
     ],
   },
-  F: {
+  Bb: {
     fretLabel: '1',
-    markers: ['', '', '', '', '', ''],
-    barre: { fret: 1, from: 0, to: 5 },
+    markers: ['x', '', '', '', '', ''],
+    barre: { fret: 1, from: 1, to: 5 },
     dots: [
-      { string: 1, fret: 3 },
       { string: 2, fret: 3 },
-      { string: 3, fret: 2 },
-    ],
-  },
-  Dm: {
-    markers: ['x', 'x', 'o', '', '', ''],
-    dots: [
-      { string: 3, fret: 2 },
+      { string: 3, fret: 3 },
       { string: 4, fret: 3 },
-      { string: 5, fret: 1 },
-    ],
-  },
-  Am: {
-    markers: ['x', 'o', '', '', '', ''],
-    dots: [
-      { string: 2, fret: 2 },
-      { string: 3, fret: 2 },
-      { string: 4, fret: 1 },
-    ],
-  },
-  Em: {
-    markers: ['o', '', '', 'o', 'o', 'o'],
-    dots: [
-      { string: 1, fret: 2 },
-      { string: 2, fret: 2 },
     ],
   },
   C: {
@@ -73,6 +47,47 @@ const chordDiagrams = {
       { string: 4, fret: 1 },
     ],
   },
+  D: {
+    markers: ['x', 'x', 'o', '', '', ''],
+    dots: [
+      { string: 3, fret: 2 },
+      { string: 4, fret: 3 },
+      { string: 5, fret: 2 },
+    ],
+  },
+  Dm: {
+    markers: ['x', 'x', 'o', '', '', ''],
+    dots: [
+      { string: 3, fret: 2 },
+      { string: 4, fret: 3 },
+      { string: 5, fret: 1 },
+    ],
+  },
+  E: {
+    markers: ['o', '', '', '', 'o', 'o'],
+    dots: [
+      { string: 1, fret: 2 },
+      { string: 2, fret: 2 },
+      { string: 3, fret: 1 },
+    ],
+  },
+  Em: {
+    markers: ['o', '', '', 'o', 'o', 'o'],
+    dots: [
+      { string: 1, fret: 2 },
+      { string: 2, fret: 2 },
+    ],
+  },
+  F: {
+    fretLabel: '1',
+    markers: ['', '', '', '', '', ''],
+    barre: { fret: 1, from: 0, to: 5 },
+    dots: [
+      { string: 1, fret: 3 },
+      { string: 2, fret: 3 },
+      { string: 3, fret: 2 },
+    ],
+  },
   G: {
     markers: ['', '', 'o', 'o', 'o', ''],
     dots: [
@@ -81,20 +96,13 @@ const chordDiagrams = {
       { string: 5, fret: 3 },
     ],
   },
-  E: {
-    markers: ['o', '', '', '', '', 'o'],
+  Gm: {
+    fretLabel: '3',
+    markers: ['', '', '', '', '', ''],
+    barre: { fret: 1, from: 0, to: 5 },
     dots: [
-      { string: 1, fret: 2 },
-      { string: 2, fret: 2 },
-      { string: 3, fret: 1 },
-    ],
-  },
-  A: {
-    markers: ['x', 'o', '', '', '', 'o'],
-    dots: [
-      { string: 2, fret: 2 },
-      { string: 3, fret: 2 },
-      { string: 4, fret: 2 },
+      { string: 1, fret: 3 },
+      { string: 2, fret: 3 },
     ],
   },
 }
@@ -120,6 +128,7 @@ function MusicNoteIcon() {
       <path
         d="M9 18a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm11-2a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"
         stroke="currentColor"
+        strokeLinecap="round"
         strokeLinejoin="round"
         strokeWidth="2"
       />
@@ -152,6 +161,38 @@ function HeartIcon({ filled = false }) {
   )
 }
 
+function PlayIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <path d="M8 5.2v13.6L18.6 12 8 5.2Z" />
+    </svg>
+  )
+}
+
+function PauseIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <path d="M7 5h3.8v14H7V5Zm6.2 0H17v14h-3.8V5Z" />
+    </svg>
+  )
+}
+
+function ArrowUpIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="m6 10 6-6 6 6M12 4v16" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.2" />
+    </svg>
+  )
+}
+
+function ArrowDownIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="m18 14-6 6-6-6M12 20V4" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.2" />
+    </svg>
+  )
+}
+
 function ChordBadge({ chord }) {
   return <span className="chord-badge">{chord}</span>
 }
@@ -166,6 +207,27 @@ function getChordList(value) {
   }
 
   return []
+}
+
+function getUniqueChords(chords) {
+  return [...new Set(chords.filter(Boolean))]
+}
+
+function isChordToken(value) {
+  return chordTokenPattern.test(value)
+}
+
+function getRhythmInfo(value) {
+  const rhythm = typeof value === 'string' ? value.trim() : ''
+  const arrows = [...rhythm].filter((character) => character === '↓' || character === '↑')
+  const isMissing = !rhythm || rhythm.includes('არ მოიძებნა')
+
+  return {
+    arrows,
+    hasArrows: arrows.length > 0,
+    isMissing,
+    label: isMissing ? 'რითმი არ მოიძებნა' : rhythm,
+  }
 }
 
 function FavoriteButton({ isFavorite, onToggle, variant = 'primary' }) {
@@ -183,50 +245,76 @@ function FavoriteButton({ isFavorite, onToggle, variant = 'primary' }) {
 }
 
 function ChordDiagram({ chord }) {
-  const diagram = chordDiagrams[chord] ?? {
+  const diagram = chordDiagrams[chord]
+  const displayDiagram = diagram ?? {
     markers: ['', '', '', '', '', ''],
-    dots: [],
+    dots: [
+      { string: 1, fret: 2 },
+      { string: 2, fret: 2 },
+      { string: 3, fret: 2 },
+    ],
   }
 
-  const stringX = (string) => 18 + string * 14
-  const fretY = (fret) => 28 + fret * 15
-  const dotY = (fret) => 28 + (fret - 0.5) * 15
+  const stringX = (string) => 30 + string * 18
+  const fretY = (fret) => 42 + fret * 21
+  const dotY = (fret) => 42 + (fret - 0.5) * 21
   const dotX = (string) => stringX(string)
 
   return (
-    <figure className="chord-diagram">
+    <figure className={diagram ? 'chord-diagram' : 'chord-diagram chord-diagram--fallback'}>
       <figcaption>{chord}</figcaption>
-      <svg viewBox="0 0 104 122" role="img" aria-label={`${chord} აკორდის დიაგრამა`}>
-        {diagram.fretLabel && (
-          <text className="chord-diagram__fret-label" x="7" y="51">
-            {diagram.fretLabel}
+      <svg className="chord-diagram__svg" viewBox="0 0 150 176" role="img" aria-label={`${chord} აკორდის დიაგრამა`}>
+        <rect className="chord-diagram__plate" x="12" y="8" width="126" height="158" rx="18" />
+        {displayDiagram.fretLabel && (
+          <text className="chord-diagram__fret-label" x="16" y="65">
+            {displayDiagram.fretLabel}
           </text>
         )}
-        {diagram.markers.map((marker, index) => (
+        {displayDiagram.markers.map((marker, index) => (
           marker ? (
-            <text key={`${marker}-${index}`} className="chord-diagram__marker" x={stringX(index)} y="15" textAnchor="middle">
+            <text key={`${marker}-${index}`} className="chord-diagram__marker" x={stringX(index)} y="29" textAnchor="middle">
               {marker}
             </text>
           ) : null
         ))}
         {[0, 1, 2, 3, 4, 5].map((string) => (
-          <line key={`string-${string}`} x1={stringX(string)} x2={stringX(string)} y1="24" y2="99" />
+          <line
+            key={`string-${string}`}
+            className={`chord-diagram__string chord-diagram__string--${string}`}
+            x1={stringX(string)}
+            x2={stringX(string)}
+            y1="42"
+            y2="147"
+          />
         ))}
         {[0, 1, 2, 3, 4, 5].map((fret) => (
-          <line key={`fret-${fret}`} className={fret === 0 ? 'chord-diagram__nut' : ''} x1="18" x2="88" y1={fretY(fret)} y2={fretY(fret)} />
+          <line
+            key={`fret-${fret}`}
+            className={fret === 0 ? 'chord-diagram__fret chord-diagram__nut' : 'chord-diagram__fret'}
+            x1="30"
+            x2="120"
+            y1={fretY(fret)}
+            y2={fretY(fret)}
+          />
         ))}
-        {diagram.barre && (
+        {displayDiagram.barre && (
           <rect
-            x={dotX(diagram.barre.from) - 6}
-            y={dotY(diagram.barre.fret) - 5}
-            width={dotX(diagram.barre.to) - dotX(diagram.barre.from) + 12}
-            height="10"
-            rx="5"
+            className="chord-diagram__barre"
+            x={dotX(displayDiagram.barre.from) - 8}
+            y={dotY(displayDiagram.barre.fret) - 7}
+            width={dotX(displayDiagram.barre.to) - dotX(displayDiagram.barre.from) + 16}
+            height="14"
+            rx="7"
           />
         )}
-        {diagram.dots.map((dot) => (
-          <circle key={`${dot.string}-${dot.fret}`} cx={dotX(dot.string)} cy={dotY(dot.fret)} r="6" />
+        {displayDiagram.dots.map((dot) => (
+          <circle className="chord-diagram__dot" key={`${dot.string}-${dot.fret}`} cx={dotX(dot.string)} cy={dotY(dot.fret)} r="7" />
         ))}
+        {!diagram && (
+          <text className="chord-diagram__fallback-label" x="75" y="158" textAnchor="middle">
+            custom
+          </text>
+        )}
       </svg>
     </figure>
   )
@@ -240,28 +328,44 @@ function LyricsBlock({ lyrics }) {
 
   const isChordLine = (line) => {
     const tokens = line.trim().split(/\s+/).filter(Boolean)
-    return tokens.length > 0 && tokens.every((token) => accentChords.includes(token))
+    return tokens.length > 0 && tokens.every(isChordToken)
   }
 
   const hasChordLines = stanzas.some((stanza) => stanza.some(isChordLine))
-  const lyricsClassName = `lyrics-pre ${hasChordLines ? 'lyrics-pre--with-chords' : 'lyrics-pre--plain'} space-y-4`
+  const lyricsClassName = `lyrics-pre ${hasChordLines ? 'lyrics-pre--with-chords' : 'lyrics-pre--plain'}`
 
   return (
-    <div className={lyricsClassName} aria-label="სიმღერის ტექსტი და აკორდები">
-      {stanzas.map((stanza, stanzaIndex) => (
-        <div className="lyrics-pre__stanza" key={`stanza-${stanzaIndex}`}>
-          {stanza.map((line, lineIndex) => (
-            <span
-              className={isChordLine(line) ? 'lyrics-pre__chords' : 'lyrics-pre__words'}
-              key={`${line}-${lineIndex}`}
-            >
-              {line}
-            </span>
-          ))}
-        </div>
-      ))}
+    <div className="lyrics-scroll-shell">
+      <div className={lyricsClassName} aria-label="სიმღერის ტექსტი და აკორდები">
+        {stanzas.map((stanza, stanzaIndex) => (
+          <div className="lyrics-pre__stanza" key={`stanza-${stanzaIndex}`}>
+            {stanza.map((line, lineIndex) => (
+              <span
+                className={isChordLine(line) ? 'lyrics-pre__chords' : 'lyrics-pre__words'}
+                key={`${stanzaIndex}-${lineIndex}`}
+              >
+                {line}
+              </span>
+            ))}
+          </div>
+        ))}
+      </div>
     </div>
   )
+}
+
+function RhythmDisplay({ rhythmInfo }) {
+  if (rhythmInfo.hasArrows) {
+    return (
+      <div className="rhythm-badges" aria-label={rhythmInfo.label}>
+        {rhythmInfo.arrows.map((arrow, index) => (
+          <span key={`${arrow}-${index}`}>{arrow}</span>
+        ))}
+      </div>
+    )
+  }
+
+  return <p className="song-quick-info__empty">{rhythmInfo.label}</p>
 }
 
 function SongChordPage({ band, song, onBackToBand }) {
@@ -269,17 +373,18 @@ function SongChordPage({ band, song, onBackToBand }) {
   const [isAutoScrolling, setIsAutoScrolling] = useState(false)
   const [isNearBottom, setIsNearBottom] = useState(false)
 
-  const verseChords = getChordList(song.verseChords ?? song.chords)
-  const chorusChords = getChordList(song.chorusChords ?? song.chorus)
+  const verseChords = useMemo(() => getChordList(song.verseChords ?? song.chords), [song])
+  const chorusChords = useMemo(() => getChordList(song.chorusChords ?? song.chorus), [song])
+  const allSongChords = useMemo(() => getUniqueChords([...verseChords, ...chorusChords]), [chorusChords, verseChords])
   const hasChorusChords = chorusChords.length > 0
-  const strummingPattern = song.strummingPattern ?? 'რითმი არ მოიძებნა'
+  const rhythmInfo = useMemo(() => getRhythmInfo(song.strummingPattern), [song.strummingPattern])
   const lyrics = song.lyrics ?? ''
 
   useEffect(() => {
     const updatePosition = () => {
       const documentHeight = document.documentElement.scrollHeight
       const remainingScroll = documentHeight - window.innerHeight - window.scrollY
-      setIsNearBottom(remainingScroll < 48)
+      setIsNearBottom(remainingScroll < 56)
     }
 
     updatePosition()
@@ -297,7 +402,9 @@ function SongChordPage({ band, song, onBackToBand }) {
       return undefined
     }
 
-    const intervalId = window.setInterval(() => {
+    let frameId = 0
+
+    const scrollFrame = () => {
       const remainingScroll = document.documentElement.scrollHeight - window.innerHeight - window.scrollY
 
       if (remainingScroll <= 2) {
@@ -305,32 +412,33 @@ function SongChordPage({ band, song, onBackToBand }) {
         return
       }
 
-      window.scrollBy({ top: 1.25, left: 0, behavior: 'auto' })
-    }, 42)
+      window.scrollBy({ top: 1.5, left: 0, behavior: 'auto' })
+      frameId = window.requestAnimationFrame(scrollFrame)
+    }
 
-    return () => window.clearInterval(intervalId)
+    frameId = window.requestAnimationFrame(scrollFrame)
+
+    return () => window.cancelAnimationFrame(frameId)
   }, [isAutoScrolling])
 
   const toggleFavorite = () => setIsFavorite((currentValue) => !currentValue)
 
-  const handleScrollButton = () => {
-    if (isAutoScrolling) {
-      setIsAutoScrolling(false)
-      return
-    }
+  const handleAutoScroll = () => {
+    setIsAutoScrolling((currentValue) => !currentValue)
+  }
 
-    if (isNearBottom) {
-      window.scrollTo({ top: 0, behavior: 'smooth' })
-      return
-    }
-
-    setIsAutoScrolling(true)
+  const handleJumpScroll = () => {
+    setIsAutoScrolling(false)
+    window.scrollTo({
+      top: isNearBottom ? 0 : document.documentElement.scrollHeight,
+      behavior: 'smooth',
+    })
   }
 
   return (
     <main className="song-chord-page">
       <nav className="song-chord-breadcrumb page-shell" aria-label="Breadcrumb">
-        <button type="button" onClick={() => onBackToBand(band.id)} aria-label="დაგდაგანის გვერდზე დაბრუნება">
+        <button type="button" onClick={() => onBackToBand(band.id)} aria-label={`${band.name} გვერდზე დაბრუნება`}>
           <span aria-hidden="true">←</span>
           <HomeIcon />
           <span>ბენდები</span>
@@ -348,8 +456,8 @@ function SongChordPage({ band, song, onBackToBand }) {
             <span>{band.name}</span>
           </div>
           <div className="song-hero-card__copy">
-            <h1>{song.title}</h1>
             <p>{band.name}</p>
+            <h1>{song.title}</h1>
             <FavoriteButton isFavorite={isFavorite} onToggle={toggleFavorite} />
           </div>
         </div>
@@ -386,7 +494,7 @@ function SongChordPage({ band, song, onBackToBand }) {
           <DrumIcon />
           <div>
             <span>მარჯვენა ხელის რითმი:</span>
-            <strong>{strummingPattern}</strong>
+            <RhythmDisplay rhythmInfo={rhythmInfo} />
           </div>
         </article>
       </section>
@@ -411,34 +519,46 @@ function SongChordPage({ band, song, onBackToBand }) {
           <section className="song-sidebar-card">
             <h2>აკორდები</h2>
             <div className="chord-diagram-grid">
-              {verseChords.map((chord) => (
+              {allSongChords.map((chord) => (
                 <ChordDiagram chord={chord} key={chord} />
               ))}
             </div>
           </section>
 
-          {hasChorusChords && (
-            <section className="song-sidebar-card song-sidebar-card--chorus">
-              <h2>მისამღერი</h2>
+          <section className="song-sidebar-card song-sidebar-card--chorus">
+            <h2>მისამღერი</h2>
+            {hasChorusChords ? (
               <div className="chorus-badges">
                 {chorusChords.map((chord) => (
                   <ChordBadge chord={chord} key={chord} />
                 ))}
               </div>
-            </section>
-          )}
+            ) : (
+              <p className="song-sidebar-card__empty">მისამღერი არ აქვს</p>
+            )}
+          </section>
         </aside>
       </section>
 
-      <button
-        className={`song-scroll-fab ${isAutoScrolling ? 'song-scroll-fab--active' : ''}`}
-        type="button"
-        aria-label={isAutoScrolling ? 'ავტოსქროლის შეჩერება' : isNearBottom ? 'ზემოთ დაბრუნება' : 'ავტოსქროლის დაწყება'}
-        aria-pressed={isAutoScrolling}
-        onClick={handleScrollButton}
-      >
-        {isAutoScrolling || isNearBottom ? '↑' : '↓'}
-      </button>
+      <div className="song-scroll-controls" aria-label="Auto scroll controls">
+        <button
+          className={`song-scroll-fab song-scroll-fab--primary ${isAutoScrolling ? 'song-scroll-fab--active' : ''}`}
+          type="button"
+          aria-label={isAutoScrolling ? 'ავტოსქროლის შეჩერება' : 'ავტოსქროლის დაწყება'}
+          aria-pressed={isAutoScrolling}
+          onClick={handleAutoScroll}
+        >
+          {isAutoScrolling ? <PauseIcon /> : <PlayIcon />}
+        </button>
+        <button
+          className="song-scroll-fab song-scroll-fab--secondary"
+          type="button"
+          aria-label={isNearBottom ? 'ზემოთ დაბრუნება' : 'ბოლოში გადასვლა'}
+          onClick={handleJumpScroll}
+        >
+          {isNearBottom ? <ArrowUpIcon /> : <ArrowDownIcon />}
+        </button>
+      </div>
     </main>
   )
 }
