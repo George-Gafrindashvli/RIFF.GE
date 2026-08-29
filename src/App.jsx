@@ -236,7 +236,7 @@ function Header({ activePage, onNavigate }) {
       />
 
       <aside
-        className={isDrawerOpen ? 'mobile-drawer mobile-drawer--open' : 'mobile-drawer'}
+        className={`bg-[#0B0F17] opacity-100 z-50 border-b border-zinc-800 ${isDrawerOpen ? 'mobile-drawer mobile-drawer--open' : 'mobile-drawer'}`}
         id="mobile-navigation"
         aria-hidden={!isDrawerOpen}
       >
