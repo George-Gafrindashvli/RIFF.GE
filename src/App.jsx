@@ -145,10 +145,6 @@ function Header({ activePage, onNavigate }) {
     return () => document.body.classList.remove('drawer-open')
   }, [isDrawerOpen])
 
-  useEffect(() => {
-    setIsDrawerOpen(false)
-  }, [activePage])
-
   const handleNavigate = (event, linkId) => {
     event.preventDefault()
     setIsDrawerOpen(false)

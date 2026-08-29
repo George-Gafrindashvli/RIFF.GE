@@ -1,16 +1,16 @@
 import { useMemo, useState } from 'react'
 
-function PlayIcon() {
+function PlayIcon({ className = 'icon icon--md' }) {
   return (
-    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+    <svg className={className} width="24" height="24" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
       <path d="M8 5.5v13l10-6.5-10-6.5Z" />
     </svg>
   )
 }
 
-function ChevronIcon() {
+function ChevronIcon({ className = 'icon icon--sm' }) {
   return (
-    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <svg className={className} width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
       <path
         d="m9 5 7 7-7 7"
         stroke="currentColor"
@@ -22,9 +22,9 @@ function ChevronIcon() {
   )
 }
 
-function MusicIcon() {
+function MusicIcon({ className = 'icon icon--md' }) {
   return (
-    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <svg className={className} width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
       <path
         d="M9 18V5l11-2v13"
         stroke="currentColor"
@@ -43,18 +43,18 @@ function MusicIcon() {
   )
 }
 
-function HomeIcon() {
+function HomeIcon({ className = 'icon icon--sm' }) {
   return (
-    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <svg className={className} width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
       <path d="M3.5 10.8 12 3.5l8.5 7.3" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" />
       <path d="M5.5 10.8V20h5v-5.3h3V20h5v-9.2" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" />
     </svg>
   )
 }
 
-function UsersIcon() {
+function UsersIcon({ className = 'icon icon--md' }) {
   return (
-    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <svg className={className} width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
       <path d="M16 19c0-2.2-1.8-4-4-4s-4 1.8-4 4" stroke="currentColor" strokeLinecap="round" strokeWidth="2" />
       <path d="M12 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" stroke="currentColor" strokeWidth="2" />
       <path d="M20 18c0-1.7-1.08-3.13-2.58-3.65M16.7 5.4a2.65 2.65 0 0 1 0 4.48M4 18c0-1.7 1.08-3.13 2.58-3.65M7.3 5.4a2.65 2.65 0 0 0 0 4.48" stroke="currentColor" strokeLinecap="round" strokeWidth="2" />
@@ -62,9 +62,9 @@ function UsersIcon() {
   )
 }
 
-function SortIcon() {
+function SortIcon({ className = 'icon icon--sm' }) {
   return (
-    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <svg className={className} width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
       <path d="M7 5h10M7 12h7M7 19h4" stroke="currentColor" strokeLinecap="round" strokeWidth="2" />
     </svg>
   )
@@ -98,7 +98,7 @@ function SongRow({ song, band, index }) {
     >
       <span className="song-row__index">{index + 1}</span>
       <span className="song-row__play" aria-hidden="true">
-        <PlayIcon />
+        <PlayIcon className="song-row__play-icon" />
       </span>
       <img className="song-row__thumbnail" src={band.thumbnail} alt="" />
       <div className="song-row__meta">
@@ -110,7 +110,7 @@ function SongRow({ song, band, index }) {
           <span key={chord}>{chord}</span>
         ))}
       </div>
-      <ChevronIcon />
+      <ChevronIcon className="song-row__chevron" />
     </a>
   )
 }
@@ -119,9 +119,9 @@ function EmptySongs({ onChooseBands }) {
   return (
     <div className="empty-songs">
       <div className="empty-songs__icon">
-        <MusicIcon />
+        <MusicIcon className="empty-songs__icon-svg" />
       </div>
-      <h2>ამ ბენდის სიმღერების აკორდები ჯერ არ არის დამატებული</h2>
+      <h2>ამ ბენდის მუსიკების აკორდები ჯერ არ არის დამატებული</h2>
       <p>აკორდები მალე დაემატება.</p>
       <button type="button" onClick={onChooseBands}>
         სხვა ბენდის არჩევა
@@ -145,45 +145,47 @@ function BandDetails({ band, onChooseBands }) {
 
   return (
     <main className="band-details-page">
-      <nav className="band-breadcrumb page-shell" aria-label="Breadcrumb">
+      <nav className="band-breadcrumb page-shell band-details-shell" aria-label="Breadcrumb">
         <button type="button" onClick={onChooseBands}>
-          <HomeIcon />
+          <HomeIcon className="band-breadcrumb__home-icon" />
           <span>ბენდები</span>
         </button>
-        <ChevronIcon />
+        <ChevronIcon className="band-breadcrumb__chevron" />
         <span>{band.name}</span>
       </nav>
 
-      <section className="band-details-hero">
-        <div className="band-details-hero__copy">
-          <p className="section-eyebrow">არჩეული ბენდი</p>
-          <h1>{band.name}</h1>
-          <p>{band.bio}</p>
-          <div className="band-details-stats" aria-label="Band statistics">
-            <span>
-              <UsersIcon />
-              {band.memberCount} წევრი
-            </span>
-            <span>
-              <MusicIcon />
-              {songCountLabel}
-            </span>
+      <div className="page-shell band-details-shell">
+        <section className="band-details-hero">
+          <div className="band-details-hero__copy">
+            <p className="section-eyebrow">არჩეული ბენდი</p>
+            <h1>{band.name}</h1>
+            <p>{band.bio}</p>
+            <div className="band-details-stats" aria-label="Band statistics">
+              <span>
+                <UsersIcon className="band-details-stats__icon" />
+                {band.memberCount} წევრი
+              </span>
+              <span>
+                <MusicIcon className="band-details-stats__icon" />
+                {songCountLabel}
+              </span>
+            </div>
           </div>
-        </div>
-        <div className="band-details-hero__image">
-          <img src={band.banner} alt={band.name} />
-        </div>
-      </section>
+          <div className="band-details-hero__image">
+            <img src={band.banner} alt={band.name} />
+          </div>
+        </section>
+      </div>
 
       <section className="song-list-section">
-        <div className="page-shell">
+        <div className="page-shell band-details-shell">
           <div className="song-list-header">
             <div>
               <p className="section-eyebrow">აკორდები</p>
               <h2>სიმღერები</h2>
             </div>
             <button type="button" onClick={() => setIsAlphabetical((currentValue) => !currentValue)}>
-              <SortIcon />
+              <SortIcon className="song-list-header__sort-icon" />
               <span>{isAlphabetical ? 'საწყისი რიგი' : 'ანბანით'}</span>
             </button>
           </div>
